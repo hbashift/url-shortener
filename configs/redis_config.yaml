@@ -1,0 +1,6 @@
+port: "8080"
+host: "localhost"
+redis:
+  addr: "db:6379"
+  pass: ""
+  db_num: "0"
