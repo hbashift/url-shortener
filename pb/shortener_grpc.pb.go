@@ -80,7 +80,7 @@ func (UnimplementedShortenerServer) mustEmbedUnimplementedShortenerServer() {}
 
 // UnsafeShortenerServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to ShortenerServer will
-// result in compilation errs.
+// result in compilation errors.
 type UnsafeShortenerServer interface {
 	mustEmbedUnimplementedShortenerServer()
 }
