@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-// ALPHABET TODO shake me
+// alphabet TODO shake me
 const (
 	alphabet  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
 	abLength  = uint64(len(alphabet))

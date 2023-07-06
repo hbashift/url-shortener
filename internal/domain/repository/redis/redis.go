@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-var ID uint64 = 0 // TODO подумать как можно сделать сервис stateless
+// TODO подумать как можно сделать сервис stateless
 var notFoundError errs.NotFound
 var connectionError errs.DatabaseConnectionError
 var insertionError errs.InsertError
@@ -52,13 +52,13 @@ func (r *redisDb) GetUrl(shortUrl uint64) (string, error) {
 // TODO передавать по указателю или по значению?
 
 func (r *redisDb) PostUrl(longUrl string) (uint64, error) {
-	_, err := r.uniqueDB.Get(r.ctx, longUrl).Result()
+	set, err := r.uniqueDB.SetNX(r.ctx, longUrl, "", 0).Result()
 
-	if err == redis.Nil {
-		err = r.mainDB.Set(r.ctx, strconv.FormatUint(ID, 10), longUrl, 0).Err()
+	if set {
+		err = r.mainDB.Set(r.ctx, strconv.FormatUint(r.id, 10), longUrl, 0).Err()
 		if err != nil {
 			log.Printf("could not insert into database%s: %v\n", r.uniqueDB, err)
-			insertionError = fmt.Errorf("could not insert into database: %w", err)
+			insertionError = fmt.Errorf("could not insert into database")
 
 			return 0, insertionError
 		}
@@ -70,17 +70,23 @@ func (r *redisDb) PostUrl(longUrl string) (uint64, error) {
 
 			return 0, insertionError
 		}
+		r.id++
+		err = r.mainDB.Set(r.ctx, "id", r.id, 0).Err()
+		if err != nil {
+			insertionError = fmt.Errorf("could not reset id value: %w", err)
 
-		ID++
-		return ID, nil
-	} else if err == nil {
+			return 0, insertionError
+		}
+
+		return r.id, nil
+	} else if !set {
 		log.Printf("trying to insert already existing url: %v", longUrl)
-		alreadyExistsError = fmt.Errorf("such url is already exists: %w", err)
+		alreadyExistsError = fmt.Errorf("such url is already exists")
 
 		return 0, alreadyExistsError
 	} else {
 		log.Printf("could not connect to database: %v\n", err)
-		connectionError = fmt.Errorf("could not connect to database: %w", err)
+		connectionError = fmt.Errorf("could not connect to database")
 
 		return 0, connectionError
 	}
@@ -104,9 +110,25 @@ func initRedis(cfg *Config) (*redis.Client, *redis.Client, context.Context) {
 func NewRedis(cfg *Config) repository.Repository {
 	mainDB, uniqueDB, ctx := initRedis(cfg)
 
+	idStr, err := mainDB.Get(ctx, "id").Result()
+	if err == redis.Nil {
+		idStr = "0"
+		err = mainDB.Set(ctx, "id", idStr, 0).Err()
+
+		if err != nil {
+			log.Fatalf("could not set id key: %v\n", err)
+		}
+	}
+
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		log.Fatalf("could not parse id value: %v", err)
+	}
+
 	return &redisDb{
 		ctx:      ctx,
 		mainDB:   mainDB,
 		uniqueDB: uniqueDB,
+		id:       id,
 	}
 }

@@ -16,32 +16,16 @@ type ShortenerServer struct {
 	pb.UnimplementedShortenerServer
 }
 
-var notFoundError errs.NotFound
-
-var insertionError errs.InsertError
-
-var conncectionError errs.DatabaseConnectionError
-
-var migrationError errs.DatabaseMigrationError
-
-var alreadyExistsError errs.AlreadyExists
-
 func (s *ShortenerServer) PostUrl(ctx context.Context, url *pb.LongUrl) (*pb.ShortUrl, error) {
-	shortUrl, err := s.shortener.PostUrl(url.GetLongUrl())
-	/*var notFoundError errs.NotFound
 	var alreadyExistsError errs.AlreadyExists
-	var connectionError errs.DatabaseConnectionError
-	var migrationError errs.DatabaseMigrationError*/
+	shortUrl, err := s.shortener.PostUrl(url.GetLongUrl())
+
 	ctx, cancel := context.WithTimeout(ctx, time.Second*1)
 	defer cancel()
 
 	if err != nil {
 		if errors.As(err, &alreadyExistsError) {
 			return nil, status.Errorf(codes.AlreadyExists, alreadyExistsError.Error())
-		} else if errors.As(err, &conncectionError) {
-			return nil, status.Errorf(codes.Internal, conncectionError.Error())
-		} else if errors.As(err, &migrationError) {
-			return nil, status.Errorf(codes.Internal, migrationError.Error())
 		}
 
 		return nil, status.Errorf(codes.Internal, err.Error())
@@ -51,6 +35,8 @@ func (s *ShortenerServer) PostUrl(ctx context.Context, url *pb.LongUrl) (*pb.Sho
 }
 
 func (s *ShortenerServer) GetUrl(ctx context.Context, url *pb.ShortUrl) (*pb.LongUrl, error) {
+	var notFoundError errs.NotFound
+
 	if len([]rune(url.GetShortUrl())) > 10 {
 		return nil, status.Errorf(codes.InvalidArgument, "short url length must be 10")
 	}
@@ -63,10 +49,6 @@ func (s *ShortenerServer) GetUrl(ctx context.Context, url *pb.ShortUrl) (*pb.Lon
 	if err != nil {
 		if errors.As(err, &notFoundError) {
 			return nil, status.Errorf(codes.InvalidArgument, notFoundError.Error())
-		} else if errors.As(err, &conncectionError) {
-			return nil, status.Errorf(codes.Internal, conncectionError.Error())
-		} else if errors.As(err, &migrationError) {
-			return nil, status.Errorf(codes.Internal, migrationError.Error())
 		}
 
 		return nil, status.Errorf(codes.Internal, err.Error())
