@@ -1,16 +1,12 @@
 package main
 
 import (
-	"github.com/hbashift/url-shortener/internal/domain/repository/postgres"
-	"github.com/hbashift/url-shortener/internal/server"
-	"github.com/hbashift/url-shortener/internal/service"
-	pb "github.com/hbashift/url-shortener/pb"
-	"google.golang.org/grpc"
-	"net"
+	"fmt"
+	"github.com/hbashift/url-shortener/internal/util/encoder"
 )
 
 func main() {
-	cfgPg := postgres.Config{
+	/*cfgPg := postgres.Config{
 		Host:     "localhost",
 		Port:     "5432",
 		Username: "postgres",
@@ -20,13 +16,13 @@ func main() {
 	}
 	rep := postgres.NewPostgresDB(&cfgPg)
 
-	/*	cfgRedis := redis.Config{
+		cfgRedis := redis.Config{
 			Addr:        ":6379",
 			Pass:        "",
 			DBNumMain:   0,
 			DBNumUnique: 1,
 		}
-		rep := redis.NewRedis(&cfgRedis)*/
+		rep := redis.NewRedis(&cfgRedis)
 
 	s := service.NewShortenerService(rep)
 	serv := server.NewShortenerServer(s)
@@ -39,5 +35,7 @@ func main() {
 
 	if err = grpcServer.Serve(l); err != nil {
 		panic(err)
-	}
+	}*/
+
+	fmt.Println(encoder.DecryptUrl("CdFksa_sdf"))
 }
