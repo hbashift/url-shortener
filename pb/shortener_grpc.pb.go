@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.23.3
-// source: proto/shortener.proto
+// source: shortener.proto
 
 package proto
 
@@ -80,7 +80,7 @@ func (UnimplementedShortenerServer) mustEmbedUnimplementedShortenerServer() {}
 
 // UnsafeShortenerServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to ShortenerServer will
-// result in compilation errors.
+// result in compilation errs.
 type UnsafeShortenerServer interface {
 	mustEmbedUnimplementedShortenerServer()
 }
@@ -142,5 +142,5 @@ var Shortener_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/shortener.proto",
+	Metadata: "shortener.proto",
 }

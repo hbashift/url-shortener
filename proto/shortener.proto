@@ -3,7 +3,7 @@ syntax = "proto3";
 option go_package = "./proto";
 
 package shortener;
-import "proto/google/api/annotations.proto";
+import "google/api/annotations.proto";
 
 service Shortener {
   rpc PostUrl (LongUrl) returns (ShortUrl) {

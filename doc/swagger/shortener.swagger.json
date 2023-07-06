@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "proto/shortener.proto",
+    "title": "shortener.proto",
     "version": "version not set"
   },
   "tags": [

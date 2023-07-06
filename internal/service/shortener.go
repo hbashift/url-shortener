@@ -3,7 +3,7 @@ package service
 import (
 	"github.com/hbashift/url-shortener/internal/domain/repository"
 	"github.com/hbashift/url-shortener/internal/util/encoder"
-	shortener "github.com/hbashift/url-shortener/proto"
+	shortener "github.com/hbashift/url-shortener/pb"
 	"log"
 )
 
@@ -22,21 +22,13 @@ func (s *ShortenerService) PostUrl(longUrl string) (*shortener.ShortUrl, error) 
 		return nil, err
 	}
 
-	res, err := encoder.EncodeUrl(id)
-	if err != nil {
-		log.Printf("could not encode url: %v", err)
-		return nil, err
-	}
+	res := encoder.EncodeUrl(id)
 
 	return &shortener.ShortUrl{ShortUrl: res}, nil
 }
 
 func (s *ShortenerService) GetUrl(shortUrl string) (*shortener.LongUrl, error) {
-	id, err := encoder.DecryptUrl(shortUrl)
-	if err != nil {
-		log.Printf("could not decrypt url: %v", err)
-		return nil, err
-	}
+	id := encoder.DecryptUrl(shortUrl)
 
 	longUrl, err := s.db.GetUrl(id)
 	if err != nil {
