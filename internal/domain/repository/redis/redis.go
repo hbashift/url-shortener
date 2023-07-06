@@ -10,7 +10,6 @@ import (
 	"strconv"
 )
 
-// TODO подумать как можно сделать сервис stateless
 var notFoundError errs.NotFound
 var connectionError errs.DatabaseConnectionError
 var insertionError errs.InsertError
@@ -55,6 +54,7 @@ func (r *redisDb) PostUrl(longUrl string) (uint64, error) {
 	set, err := r.uniqueDB.SetNX(r.ctx, longUrl, "", 0).Result()
 
 	if set {
+		r.id++
 		err = r.mainDB.Set(r.ctx, strconv.FormatUint(r.id, 10), longUrl, 0).Err()
 		if err != nil {
 			log.Printf("could not insert into database%s: %v\n", r.uniqueDB, err)
@@ -70,7 +70,7 @@ func (r *redisDb) PostUrl(longUrl string) (uint64, error) {
 
 			return 0, insertionError
 		}
-		r.id++
+
 		err = r.mainDB.Set(r.ctx, "id", r.id, 0).Err()
 		if err != nil {
 			insertionError = fmt.Errorf("could not reset id value: %w", err)
