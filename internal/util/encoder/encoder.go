@@ -11,6 +11,7 @@ const (
 	urlLength = 10
 )
 
+// EncodeUrl converting an id uint64 from decimal to 63base
 func EncodeUrl(id uint64) string {
 	res := make([]byte, 10)
 	for i := urlLength - 1; i >= 0; i-- {
@@ -25,30 +26,17 @@ func EncodeUrl(id uint64) string {
 	return string(res)
 }
 
+// DecryptUrl converting a shortened url from 63base to decimal
 func DecryptUrl(shortUrl string) uint64 {
 	byteArr := []byte(shortUrl)
-	var res uint64 = 0
+	res := uint64(0)
+	pow := uint64(1)
 
 	for i := 0; i < urlLength; i++ {
 		index := strings.Index(alphabet, string(byteArr[urlLength-1-i]))
-		res += uint64(index) * uint64Pow(abLength, uint64(i))
+		res += uint64(index) * pow
+		pow *= abLength
 	}
 
 	return res
-}
-
-// uint64Pow TODO optimize me
-func uint64Pow(n, m uint64) uint64 {
-	if m == 0 {
-		return 1
-	}
-
-	result := n
-
-	var i uint64 = 2
-	for ; i <= m; i++ {
-		result *= n
-	}
-
-	return result
 }

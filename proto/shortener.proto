@@ -8,13 +8,13 @@ import "google/api/annotations.proto";
 service Shortener {
   rpc PostUrl (LongUrl) returns (ShortUrl) {
     option (google.api.http) = {
-      post: "/url"
+      post: "/v1/url"
       body: "*"
     };
   }
   rpc GetUrl (ShortUrl) returns (LongUrl) {
     option (google.api.http) = {
-      get: "/url/{shortUrl}"
+      get: "/v1/url/{shortUrl}"
     };
   }
 }

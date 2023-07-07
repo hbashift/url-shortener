@@ -3,17 +3,12 @@ package redis
 import (
 	"context"
 	"fmt"
-	"github.com/hbashift/url-shortener/internal/domain/errs"
 	"github.com/hbashift/url-shortener/internal/domain/repository"
+	"github.com/hbashift/url-shortener/internal/errs"
 	"github.com/redis/go-redis/v9"
 	"log"
 	"strconv"
 )
-
-var notFoundError errs.NotFound
-var connectionError errs.DatabaseConnectionError
-var insertionError errs.InsertError
-var alreadyExistsError errs.AlreadyExists
 
 type redisDb struct {
 	ctx      context.Context
@@ -35,14 +30,12 @@ func (r *redisDb) GetUrl(shortUrl uint64) (string, error) {
 	val, err := r.mainDB.Get(r.ctx, strconv.FormatUint(shortUrl, 10)).Result()
 	if err == redis.Nil {
 		log.Printf("url not found: %v\n", err)
-		notFoundError = fmt.Errorf("url not found: %w", err)
 
-		return "", notFoundError
+		return "", fmt.Errorf("cannot find url: %w", errs.ErrNotFound)
 	} else if err != nil {
 		log.Printf("could not connect to database: %v\n", err)
-		connectionError = fmt.Errorf("could not connect to database: %v", err)
 
-		return "", connectionError
+		return "", fmt.Errorf("could not connect to database: %v", errs.ErrDatabaseConnection)
 	}
 
 	return val, nil
@@ -57,40 +50,34 @@ func (r *redisDb) PostUrl(longUrl string) (uint64, error) {
 		r.id++
 		err = r.mainDB.Set(r.ctx, strconv.FormatUint(r.id, 10), longUrl, 0).Err()
 		if err != nil {
-			log.Printf("could not insert into database%s: %v\n", r.uniqueDB, err)
-			insertionError = fmt.Errorf("could not insert into database")
+			log.Printf("could not insert into database%s: %v\n", "redis_0", errs.ErrInsertion)
 
-			return 0, insertionError
+			return 0, fmt.Errorf("could not insert into database: %w", errs.ErrInsertion)
 		}
 
 		err = r.uniqueDB.Set(r.ctx, longUrl, "", 0).Err()
 		if err != nil {
-			log.Printf("could not insert into database%s: %v\n", r.uniqueDB, err)
-			insertionError = fmt.Errorf("could not insert into database: %w", err)
+			log.Printf("could not insert into database%s: %v\n", "redis_1", errs.ErrInsertion)
 
-			return 0, insertionError
+			return 0, fmt.Errorf("could not insert into database: %w", errs.ErrInsertion)
 		}
 
 		err = r.mainDB.Set(r.ctx, "id", r.id, 0).Err()
 		if err != nil {
-			insertionError = fmt.Errorf("could not reset id value: %w", err)
 
-			return 0, insertionError
+			return 0, fmt.Errorf("could not reset id value: %w", errs.ErrInsertion)
 		}
 
 		return r.id, nil
 	} else if !set {
-		log.Printf("trying to insert already existing url: %v", longUrl)
-		alreadyExistsError = fmt.Errorf("such url is already exists")
+		log.Printf("trying to insert already existing url %v: %v", longUrl, errs.ErrAlreadyExists)
 
-		return 0, alreadyExistsError
+		return 0, fmt.Errorf("such url is already exists: %w", errs.ErrAlreadyExists)
 	} else {
-		log.Printf("could not connect to database: %v\n", err)
-		connectionError = fmt.Errorf("could not connect to database")
+		log.Printf("could not connect to database: %v\n", errs.ErrDatabaseConnection)
 
-		return 0, connectionError
+		return 0, fmt.Errorf("could not connect to database: %w", errs.ErrDatabaseConnection)
 	}
-
 }
 
 func initRedis(cfg *Config) (*redis.Client, *redis.Client, context.Context) {

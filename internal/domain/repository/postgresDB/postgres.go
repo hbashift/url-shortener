@@ -1,19 +1,16 @@
-package postgres
+package postgresDB
 
 import (
+	"errors"
 	"fmt"
-	"github.com/hbashift/url-shortener/internal/domain/errs"
 	"github.com/hbashift/url-shortener/internal/domain/repository"
 	"github.com/hbashift/url-shortener/internal/domain/repository/model"
+	"github.com/hbashift/url-shortener/internal/errs"
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
 )
-
-var notFoundError errs.NotFound
-var alreadyExistsError errs.AlreadyExists
-var connectionError errs.DatabaseConnectionError
-var migrationError errs.DatabaseMigrationError
 
 type postgresDb struct {
 	db *gorm.DB
@@ -30,13 +27,16 @@ type Config struct {
 
 func (p *postgresDb) GetUrl(shortUrl uint64) (string, error) {
 	url := model.Url{}
-	result := p.db.Take(&url, shortUrl)
+	err := p.db.Take(&url, shortUrl).Error
 
-	if result.Error != nil {
-		log.Printf("url not found: %v\n", result.Error)
-		notFoundError = fmt.Errorf("url not found: %w", result.Error)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Printf("url not found: %v\n", err)
 
-		return "", notFoundError
+			return "", fmt.Errorf("cannot get url: %w", errs.ErrNotFound)
+		}
+
+		return "", fmt.Errorf("db error: %w", err)
 	}
 
 	return url.Url, nil
@@ -44,13 +44,17 @@ func (p *postgresDb) GetUrl(shortUrl uint64) (string, error) {
 
 func (p *postgresDb) PostUrl(longUrl string) (uint64, error) {
 	url := model.Url{Url: longUrl}
-	result := p.db.Select("url").Create(&url)
+	err := p.db.Select("url").Create(&url).Error
+	UniqueViolationErr := &pgconn.PgError{Code: "23505"}
 
-	if result.Error != nil {
-		log.Printf("could not insert new record: %v", result.Error)
-		alreadyExistsError = fmt.Errorf("record already exists: %w", result.Error)
+	if err != nil {
+		if err != nil && errors.As(err, &UniqueViolationErr) {
+			log.Printf("could not insert new record: %v", gorm.ErrDuplicatedKey)
 
-		return 0, alreadyExistsError
+			return 0, fmt.Errorf("record already exists: %w", errs.ErrAlreadyExists)
+		}
+
+		return 0, fmt.Errorf("db error: %w", err)
 	}
 
 	return url.ID, nil
@@ -71,18 +75,20 @@ func initPostgresDB(cfg *Config) (*gorm.DB, error) {
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Printf("could not connect to database: %v\n", err)
-		connectionError = fmt.Errorf("could not connect to database: %w", err)
+		if err == gorm.ErrInvalidDB {
+			log.Printf("could not connect to database: %v\n", err)
 
-		return nil, connectionError
+			return nil, fmt.Errorf("could not connect to database: %w", err)
+		}
+
+		return nil, err
 	}
 
 	err = db.AutoMigrate(&model.Url{})
 	if err != nil {
 		log.Printf("could not migrate database: %v\n", err)
-		migrationError = fmt.Errorf("could not migrate database: %w", err)
 
-		return nil, migrationError
+		return nil, fmt.Errorf("could not migrate database: %w", errs.ErrDatabaseMigr)
 	}
 
 	return db, nil
