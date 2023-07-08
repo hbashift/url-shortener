@@ -1,10 +1,14 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	"github.com/hbashift/url-shortener/internal/domain/repository"
+	"github.com/hbashift/url-shortener/internal/domain/repository/model"
+	"github.com/hbashift/url-shortener/internal/errs"
 	"github.com/hbashift/url-shortener/internal/util/encoder"
-	shortener "github.com/hbashift/url-shortener/pb"
 	"log"
+	"math/rand"
 )
 
 type ShortenerService struct {
@@ -15,26 +19,43 @@ func NewShortenerService(db repository.Repository) *ShortenerService {
 	return &ShortenerService{db: db}
 }
 
-func (s *ShortenerService) PostUrl(longUrl string) (*shortener.ShortUrl, error) {
-	id, err := s.db.PostUrl(longUrl)
+func (s *ShortenerService) PostUrl(longUrl string) (string, error) {
+	id := rand.Uint64()
+	shortUrl := encoder.EncodeUrl(id, false)
+	url := model.Url{
+		ShortUrl: shortUrl,
+		LongUrl:  longUrl,
+	}
+
+	shortUrl, err := s.db.PostUrl(&url)
 	if err != nil {
 		log.Printf("could not post url: %v", err)
-		return nil, err
+
+		if errors.Is(err, errs.ErrShortUrlExists) {
+			for err != nil {
+				id = rand.Uint64()
+				shortUrl = encoder.EncodeUrl(id, true)
+
+				url.ShortUrl = shortUrl
+				shortUrl, err = s.db.PostUrl(&url)
+			}
+
+		} else if errors.Is(err, errs.ErrLongUrlExists) {
+			return "", fmt.Errorf("such long url already exists: %w", errs.ErrAlreadyExists)
+		}
 	}
 
-	res := encoder.EncodeUrl(id)
-
-	return &shortener.ShortUrl{ShortUrl: res}, nil
+	return shortUrl, nil
 }
 
-func (s *ShortenerService) GetUrl(shortUrl string) (*shortener.LongUrl, error) {
-	id := encoder.DecryptUrl(shortUrl)
+func (s *ShortenerService) GetUrl(shortUrl string) (string, error) {
+	url := model.Url{ShortUrl: shortUrl}
 
-	longUrl, err := s.db.GetUrl(id)
+	longUrl, err := s.db.GetUrl(&url)
 	if err != nil {
-		log.Printf("could not get original url: %v", err)
-		return nil, err
+
+		return "", fmt.Errorf("could not get original longUrl: %w", err)
 	}
 
-	return &shortener.LongUrl{LongUrl: longUrl}, nil
+	return longUrl, nil
 }

@@ -1,8 +1,8 @@
 package model
 
 type Url struct {
-	ID  uint64 `gorm:"type:bigserial; primarykey"`
-	Url string `gorm:"unique; not null"`
+	ShortUrl string `gorm:"primarykey"`
+	LongUrl  string `gorm:"unique; not null"`
 }
 
 type ShortUrl struct {

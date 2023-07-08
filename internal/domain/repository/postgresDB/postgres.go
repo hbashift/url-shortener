@@ -6,6 +6,7 @@ import (
 	"github.com/hbashift/url-shortener/internal/domain/repository"
 	"github.com/hbashift/url-shortener/internal/domain/repository/model"
 	"github.com/hbashift/url-shortener/internal/errs"
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
@@ -24,9 +25,9 @@ type Config struct {
 	SSLMode  string
 }
 
-func (p *postgresDb) isExists(longUrl string) bool {
+func (p *postgresDb) isExists(columnName, value string) bool {
 	var url model.Url
-	r := p.db.Where("url = ?", longUrl).Find(&url)
+	r := p.db.Where(columnName+" = ?", value).Find(&url)
 	if r.Error != nil {
 		return true
 	}
@@ -34,9 +35,9 @@ func (p *postgresDb) isExists(longUrl string) bool {
 	return r.RowsAffected > 0
 }
 
-func (p *postgresDb) GetUrl(shortUrl uint64) (string, error) {
-	url := model.Url{}
-	err := p.db.Take(&url, shortUrl).Error
+func (p *postgresDb) GetUrl(url *model.Url) (string, error) {
+	shortUrl := url.ShortUrl
+	err := p.db.Where("short_url = ?", shortUrl).Take(&url).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -48,25 +49,30 @@ func (p *postgresDb) GetUrl(shortUrl uint64) (string, error) {
 		return "", fmt.Errorf("db error: %w", err)
 	}
 
-	return url.Url, nil
+	return url.LongUrl, nil
 }
 
-func (p *postgresDb) PostUrl(longUrl string) (uint64, error) {
-	url := model.Url{Url: longUrl}
-	if p.isExists(longUrl) {
+func (p *postgresDb) PostUrl(url *model.Url) (string, error) {
+	if p.isExists("long_url", url.LongUrl) {
 		log.Printf("could not insert new record: %v", gorm.ErrDuplicatedKey)
 
-		return 0, fmt.Errorf("record already exists: %w", errs.ErrAlreadyExists)
+		return "", fmt.Errorf("record already exists: %w", errs.ErrLongUrlExists)
 	}
 
-	err := p.db.Select("url").Create(&url).Error
+	err := p.db.Select("long_url", "short_url").Create(&url).Error
+	UniqueViolationErr := &pgconn.PgError{Code: "23505"}
 
 	if err != nil {
+		if err != nil && errors.As(err, &UniqueViolationErr) {
+			log.Printf("could not insert new record: %v", gorm.ErrDuplicatedKey)
 
-		return 0, fmt.Errorf("db error: %w", err)
+			return "", fmt.Errorf("short url already exists: %w", errs.ErrShortUrlExists)
+		}
+
+		return "", fmt.Errorf("db error: %w", err)
 	}
 
-	return url.ID, nil
+	return url.ShortUrl, nil
 }
 
 func NewPostgresDB(cfg *Config) repository.Repository {

@@ -1,18 +1,29 @@
 package encoder
 
 import (
-	"strings"
+	"math/rand"
 )
 
 // alphabet TODO shake me
-const (
+var (
 	alphabet  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
 	abLength  = uint64(len(alphabet))
 	urlLength = 10
 )
 
-// EncodeUrl converting an id uint64 from decimal to 63base
-func EncodeUrl(id uint64) string {
+/*
+EncodeUrl converting an id uint64 from decimal to 63base
+shuffles array when shuffle bool is true
+*/
+func EncodeUrl(id uint64, shuffle bool) string {
+	if shuffle {
+		alphabetArr := []byte(alphabet)
+		rand.Shuffle(len(alphabetArr), func(i, j int) {
+			alphabetArr[i], alphabetArr[j] = alphabetArr[j], alphabetArr[i]
+		})
+		alphabet = string(alphabetArr)
+	}
+
 	res := make([]byte, 10)
 	for i := urlLength - 1; i >= 0; i-- {
 		if id > 0 {
@@ -24,19 +35,4 @@ func EncodeUrl(id uint64) string {
 	}
 
 	return string(res)
-}
-
-// DecryptUrl converting a shortened url from 63base to decimal
-func DecryptUrl(shortUrl string) uint64 {
-	byteArr := []byte(shortUrl)
-	res := uint64(0)
-	pow := uint64(1)
-
-	for i := 0; i < urlLength; i++ {
-		index := strings.Index(alphabet, string(byteArr[urlLength-1-i]))
-		res += uint64(index) * pow
-		pow *= abLength
-	}
-
-	return res
 }

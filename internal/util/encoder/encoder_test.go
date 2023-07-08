@@ -6,32 +6,6 @@ import (
 	"testing"
 )
 
-func TestDecryptUrl(t *testing.T) {
-	type args struct {
-		shortUrl string
-	}
-	tests := []struct {
-		name string
-		args args
-		want uint64
-	}{
-		{
-			name: "test_1",
-			args: args{shortUrl: "CdFksa_sdf"},
-			want: 438614015246978198,
-		},
-		{
-			name: "test_2",
-			args: args{shortUrl: "aaaaaaaaaa"},
-			want: 0,
-		},
-	}
-	for _, tt := range tests {
-		assert.Equal(t, tt.want, DecryptUrl(tt.args.shortUrl),
-			fmt.Sprintf("DecryptUrl() = %v, want %v", DecryptUrl(tt.args.shortUrl), tt.want))
-	}
-}
-
 func TestEncodeUrl(t *testing.T) {
 	type args struct {
 		id uint64
@@ -58,7 +32,7 @@ func TestEncodeUrl(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		assert.Equal(t, tt.want, EncodeUrl(tt.args.id),
-			fmt.Sprintf("EncodeUrl() = %v, want %v", EncodeUrl(tt.args.id), tt.want))
+		assert.Equal(t, tt.want, EncodeUrl(tt.args.id, false),
+			fmt.Sprintf("EncodeUrl() = %v, want %v", EncodeUrl(tt.args.id, false), tt.want))
 	}
 }

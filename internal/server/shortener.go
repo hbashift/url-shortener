@@ -21,10 +21,10 @@ func (s *shortenerServer) PostUrl(ctx context.Context, url *pb.LongUrl) (*pb.Sho
 		return nil, status.Errorf(codes.InvalidArgument, "url length must > 0")
 	}
 
-	shortUrl, err := s.shortener.PostUrl(url.GetLongUrl())
-
 	ctx, cancel := context.WithTimeout(ctx, time.Second*1)
 	defer cancel()
+
+	shortUrl, err := s.shortener.PostUrl(url.GetLongUrl())
 
 	if err != nil {
 		if errors.Is(err, errs.ErrAlreadyExists) {
@@ -34,7 +34,9 @@ func (s *shortenerServer) PostUrl(ctx context.Context, url *pb.LongUrl) (*pb.Sho
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	return shortUrl, nil
+	res := pb.ShortUrl{ShortUrl: shortUrl}
+
+	return &res, nil
 }
 
 func (s *shortenerServer) GetUrl(ctx context.Context, url *pb.ShortUrl) (*pb.LongUrl, error) {
@@ -55,7 +57,9 @@ func (s *shortenerServer) GetUrl(ctx context.Context, url *pb.ShortUrl) (*pb.Lon
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	return longUrl, nil
+	res := pb.LongUrl{LongUrl: longUrl}
+
+	return &res, nil
 }
 
 func NewShortenerServer(s service.ShortenerService) pb.ShortenerServer {

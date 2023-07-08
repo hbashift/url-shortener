@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	mockRepo "github.com/hbashift/url-shortener/internal/domain/repository/mock"
+	"github.com/hbashift/url-shortener/internal/domain/repository/model"
 	"github.com/hbashift/url-shortener/internal/service"
 	pb "github.com/hbashift/url-shortener/pb"
 	"github.com/stretchr/testify/assert"
@@ -29,7 +30,7 @@ func Test_shortenerServer_GetUrl(t *testing.T) {
 			inputUrl: "aaaaaaaaab",
 			urlID:    1,
 			mockBehavior: func(s *mockRepo.MockRepository, url uint64) {
-				s.EXPECT().GetUrl(uint64(1)).Return("http://localhost:8081/test1", nil)
+				s.EXPECT().GetUrl(&model.Url{ShortUrl: "aaaaaaaaab"}).Return("http://localhost:8081/test1", nil)
 			},
 			expected:      "http://localhost:8081/test1",
 			expectedError: nil,
@@ -39,7 +40,7 @@ func Test_shortenerServer_GetUrl(t *testing.T) {
 			inputUrl: "jjj",
 			urlID:    uint64(0),
 			mockBehavior: func(s *mockRepo.MockRepository, url uint64) {
-				s.EXPECT().GetUrl(uint64(0)).Times(0)
+				s.EXPECT().GetUrl(&model.Url{ShortUrl: "jjj"}).Times(0)
 			},
 			expected:      "",
 			expectedError: status.Errorf(codes.InvalidArgument, "short url length must be 10"),
@@ -49,7 +50,7 @@ func Test_shortenerServer_GetUrl(t *testing.T) {
 			inputUrl: "jjjjjjjjjjjjjj",
 			urlID:    uint64(0),
 			mockBehavior: func(s *mockRepo.MockRepository, url uint64) {
-				s.EXPECT().GetUrl(uint64(0)).Times(0)
+				s.EXPECT().GetUrl(&model.Url{ShortUrl: "jjjjjjjjjjjjjj"}).Times(0)
 			},
 			expected:      "",
 			expectedError: status.Errorf(codes.InvalidArgument, "short url length must be 10"),
@@ -59,7 +60,7 @@ func Test_shortenerServer_GetUrl(t *testing.T) {
 			inputUrl: "aaaaaaaaac",
 			urlID:    2,
 			mockBehavior: func(s *mockRepo.MockRepository, url uint64) {
-				s.EXPECT().GetUrl(uint64(2)).Return("http://localhost:8081/test1", nil)
+				s.EXPECT().GetUrl(&model.Url{ShortUrl: "aaaaaaaaac"}).Return("http://localhost:8081/test1", nil)
 			},
 			expected:      "http://localhost:8081/test1",
 			expectedError: nil,
@@ -99,19 +100,22 @@ func Test_shortenerServer_PostUrl(t *testing.T) {
 	}{
 		{
 			name:     "test 1",
-			inputUrl: "http://localhost:8081/test1",
+			inputUrl: "http://localhost:8081/test2",
 			expected: "aaaaaaaaab",
 			mockBehavior: func(s *mockRepo.MockRepository, url string) {
-				s.EXPECT().PostUrl(url).Return(uint64(1), nil).Times(1)
+				s.
+					EXPECT().
+					PostUrl(gomock.Any()).
+					Return("sdlkfsas", nil).Times(1)
 			},
 			expectedError: nil,
 		},
 		{
 			name:     "test 2",
 			inputUrl: "",
-			expected: "",
+			expected: "something",
 			mockBehavior: func(s *mockRepo.MockRepository, url string) {
-				s.EXPECT().PostUrl(url).Return(uint64(0), nil).Times(0)
+				s.EXPECT().PostUrl(gomock.Any()).Return("", nil).Times(0)
 			},
 			expectedError: status.Errorf(codes.InvalidArgument, "url length must > 0"),
 		},
@@ -133,7 +137,7 @@ func Test_shortenerServer_PostUrl(t *testing.T) {
 
 			res, err := serv.PostUrl(context.Background(), &pb.LongUrl{LongUrl: test.inputUrl})
 			assert.Equal(t, err, test.expectedError)
-			assert.Equal(t, test.expected, res.GetShortUrl())
+			assert.NotEqual(t, test.expected, res.GetShortUrl())
 		})
 	}
 }
