@@ -20,7 +20,7 @@
       "post": {
         "operationId": "Shortener_PostUrl",
         "responses": {
-          "200": {
+          "201": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/shortenerShortUrl"
