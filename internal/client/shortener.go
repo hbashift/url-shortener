@@ -7,11 +7,18 @@ import (
 	"google.golang.org/grpc"
 )
 
+// shortenerClient - implements proto.ShortenerClient
 type shortenerClient struct {
 	client pb.ShortenerClient
 }
 
-func (s *shortenerClient) PostUrl(ctx context.Context,
+// NewClient - creates new proto.ShortenerClient
+func NewClient(conn *grpc.ClientConn) pb.ShortenerClient {
+	return &shortenerClient{client: pb.NewShortenerClient(conn)}
+}
+
+func (s *shortenerClient) PostUrl(
+	ctx context.Context,
 	longUrl *pb.LongUrl,
 	opts ...grpc.CallOption) (*pb.ShortUrl, error) {
 
@@ -23,7 +30,8 @@ func (s *shortenerClient) PostUrl(ctx context.Context,
 	return resp, nil
 }
 
-func (s *shortenerClient) GetUrl(ctx context.Context,
+func (s *shortenerClient) GetUrl(
+	ctx context.Context,
 	shortUrl *pb.ShortUrl,
 	opts ...grpc.CallOption) (*pb.LongUrl, error) {
 
@@ -33,8 +41,4 @@ func (s *shortenerClient) GetUrl(ctx context.Context,
 	}
 
 	return resp, nil
-}
-
-func NewClient(conn *grpc.ClientConn) pb.ShortenerClient {
-	return &shortenerClient{client: pb.NewShortenerClient(conn)}
 }

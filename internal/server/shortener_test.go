@@ -30,7 +30,7 @@ func Test_shortenerServer_GetUrl(t *testing.T) {
 			inputUrl: "aaaaaaaaab",
 			urlID:    1,
 			mockBehavior: func(s *mockRepo.MockRepository, url uint64) {
-				s.EXPECT().GetUrl(&model.Url{ShortUrl: "aaaaaaaaab"}).Return("http://localhost:8081/test1", nil)
+				s.EXPECT().GetUrl(&model.Url{ShortUrl: "aaaaaaaaab"}, false).Return("http://localhost:8081/test1", nil)
 			},
 			expected:      "http://localhost:8081/test1",
 			expectedError: nil,
@@ -40,7 +40,7 @@ func Test_shortenerServer_GetUrl(t *testing.T) {
 			inputUrl: "jjj",
 			urlID:    uint64(0),
 			mockBehavior: func(s *mockRepo.MockRepository, url uint64) {
-				s.EXPECT().GetUrl(&model.Url{ShortUrl: "jjj"}).Times(0)
+				s.EXPECT().GetUrl(&model.Url{ShortUrl: "jjj"}, false).Times(0)
 			},
 			expected:      "",
 			expectedError: status.Errorf(codes.InvalidArgument, "short url length must be 10"),
@@ -50,7 +50,7 @@ func Test_shortenerServer_GetUrl(t *testing.T) {
 			inputUrl: "jjjjjjjjjjjjjj",
 			urlID:    uint64(0),
 			mockBehavior: func(s *mockRepo.MockRepository, url uint64) {
-				s.EXPECT().GetUrl(&model.Url{ShortUrl: "jjjjjjjjjjjjjj"}).Times(0)
+				s.EXPECT().GetUrl(&model.Url{ShortUrl: "jjjjjjjjjjjjjj"}, false).Times(0)
 			},
 			expected:      "",
 			expectedError: status.Errorf(codes.InvalidArgument, "short url length must be 10"),
@@ -60,7 +60,7 @@ func Test_shortenerServer_GetUrl(t *testing.T) {
 			inputUrl: "aaaaaaaaac",
 			urlID:    2,
 			mockBehavior: func(s *mockRepo.MockRepository, url uint64) {
-				s.EXPECT().GetUrl(&model.Url{ShortUrl: "aaaaaaaaac"}).Return("http://localhost:8081/test1", nil)
+				s.EXPECT().GetUrl(&model.Url{ShortUrl: "aaaaaaaaac"}, false).Return("http://localhost:8081/test1", nil)
 			},
 			expected:      "http://localhost:8081/test1",
 			expectedError: nil,

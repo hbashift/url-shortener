@@ -9,6 +9,8 @@ import (
 	"log"
 )
 
+// main - runs simple gRPC client.
+// Run gRPC server first
 func main() {
 	log.Print("starting")
 	opts := []grpc.DialOption{
@@ -34,5 +36,4 @@ func main() {
 	}
 
 	fmt.Println(response.GetShortUrl())
-	// Реализовать консольно
 }

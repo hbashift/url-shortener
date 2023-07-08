@@ -19,6 +19,7 @@ services:
     ports:
       - "8081:8080"
     restart: unless-stopped
+  # gRPC gateway service
   gateway:
     build:
       context: .

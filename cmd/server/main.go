@@ -13,6 +13,7 @@ import (
 	"strconv"
 )
 
+// RunGrpcServerWithRedis - running server with redis database
 func RunGrpcServerWithRedis(redisConfig redis.Config, protocol, port string) {
 	rep := redis.NewRedis(&redisConfig)
 
@@ -33,6 +34,7 @@ func RunGrpcServerWithRedis(redisConfig redis.Config, protocol, port string) {
 	}
 }
 
+// RunGrpcServerWithPg - running server with PostgreSQL database
 func RunGrpcServerWithPg(pgConfig postgresDB.Config, protocol, port string) {
 	rep := postgresDB.NewPostgresDB(&pgConfig)
 
@@ -75,16 +77,16 @@ func main() {
 			panic(err)
 		}
 
-		uniqueDB, err := strconv.Atoi(os.Getenv("UNIQUE_DB"))
+		longDB, err := strconv.Atoi(os.Getenv("LONG_DB"))
 		if err != nil {
 			panic(err)
 		}
 
 		cfg := redis.Config{
-			Addr:        os.Getenv("REDIS_ADDR"),
-			Pass:        os.Getenv("PASS"),
-			DBNumMain:   mainDB,
-			DBNumUnique: uniqueDB,
+			Addr:      os.Getenv("REDIS_ADDR"),
+			Pass:      os.Getenv("PASS"),
+			DBNumMain: mainDB,
+			DBNumLong: longDB,
 		}
 
 		RunGrpcServerWithRedis(cfg, "tcp", os.Getenv("PORT"))

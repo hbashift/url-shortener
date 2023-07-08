@@ -35,18 +35,18 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // GetUrl mocks base method.
-func (m *MockRepository) GetUrl(url *model.Url) (string, error) {
+func (m *MockRepository) GetUrl(url *model.Url, byLongUrl bool) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUrl", url)
+	ret := m.ctrl.Call(m, "GetUrl", url, byLongUrl)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUrl indicates an expected call of GetUrl.
-func (mr *MockRepositoryMockRecorder) GetUrl(url interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetUrl(url, byLongUrl interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUrl", reflect.TypeOf((*MockRepository)(nil).GetUrl), url)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUrl", reflect.TypeOf((*MockRepository)(nil).GetUrl), url, byLongUrl)
 }
 
 // PostUrl mocks base method.

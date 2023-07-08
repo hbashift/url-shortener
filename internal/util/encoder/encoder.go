@@ -4,7 +4,6 @@ import (
 	"math/rand"
 )
 
-// alphabet TODO shake me
 var (
 	alphabet  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
 	abLength  = uint64(len(alphabet))
@@ -13,7 +12,7 @@ var (
 
 /*
 EncodeUrl converting an id uint64 from decimal to 63base
-shuffles array when shuffle bool is true
+shuffles alphabet when shuffle flag is true
 */
 func EncodeUrl(id uint64, shuffle bool) string {
 	if shuffle {

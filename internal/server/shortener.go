@@ -8,6 +8,7 @@ import (
 	pb "github.com/hbashift/url-shortener/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"log"
 	"time"
 )
 
@@ -17,7 +18,7 @@ type shortenerServer struct {
 }
 
 func (s *shortenerServer) PostUrl(ctx context.Context, url *pb.LongUrl) (*pb.ShortUrl, error) {
-	if len([]rune(url.GetLongUrl())) == 0 {
+	if len(url.GetLongUrl()) == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "url length must > 0")
 	}
 
@@ -28,9 +29,12 @@ func (s *shortenerServer) PostUrl(ctx context.Context, url *pb.LongUrl) (*pb.Sho
 
 	if err != nil {
 		if errors.Is(err, errs.ErrAlreadyExists) {
+			log.Printf("url already exists: %v", err)
+
 			return nil, status.Errorf(codes.AlreadyExists, err.Error())
 		}
 
+		log.Printf("internal error: %v", err)
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
@@ -51,9 +55,12 @@ func (s *shortenerServer) GetUrl(ctx context.Context, url *pb.ShortUrl) (*pb.Lon
 
 	if err != nil {
 		if errors.Is(err, errs.ErrNotFound) {
+			log.Printf("url not found: %v", err)
+
 			return nil, status.Errorf(codes.InvalidArgument, err.Error())
 		}
 
+		log.Printf("internal error: %v", err)
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
@@ -62,6 +69,7 @@ func (s *shortenerServer) GetUrl(ctx context.Context, url *pb.ShortUrl) (*pb.Lon
 	return &res, nil
 }
 
+// NewShortenerServer - creates new proto.ShortenerServer
 func NewShortenerServer(s service.ShortenerService) pb.ShortenerServer {
 	return &shortenerServer{shortener: s}
 }
