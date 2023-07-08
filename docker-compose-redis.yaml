@@ -30,6 +30,5 @@ services:
       - server
     ports:
       - "9091:9090"
-    restart: unless-stopped
 #volumes:
 #  redis_volume_data:
