@@ -3,18 +3,18 @@ syntax = "proto3";
 option go_package = "./proto";
 
 package shortener;
-import "proto/google/api/annotations.proto";
+import "google/api/annotations.proto";
 
 service Shortener {
   rpc PostUrl (LongUrl) returns (ShortUrl) {
     option (google.api.http) = {
-      post: "/url"
+      post: "/v1/url"
       body: "*"
     };
   }
   rpc GetUrl (ShortUrl) returns (LongUrl) {
     option (google.api.http) = {
-      get: "/url/{shortUrl}"
+      get: "/v1/url/{shortUrl}"
     };
   }
 }
@@ -26,5 +26,3 @@ message LongUrl {
 message ShortUrl {
   string shortUrl = 1;
 }
-
-/*protoc --go_out=. --go-grpc_out=. --grpc-gateway_out=. --grpc-gateway_opt generate_unbound_methods=true --openapiv2_out . proto/shortener.proto*/
