@@ -18,7 +18,7 @@ provides a gRPC API for shortening links and getting their original references.
 - **Database** - there are two options: in-memory storage and on disk. In-memory storage is implemented using Redis 
 when as disk storage is implemented using PostgreSQL
 - **HTTP proxy server** - gRPC Gateway implementation. It is provides a REST API for interacting with the gRPC server
-- 
+
 ![Architecture of the system](/assets/architecture.png)
 
 ## Database overview
