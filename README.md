@@ -8,7 +8,7 @@ links and getting their original reference.
 - [Architecture](#architecture)
 - [Database overview](#database-overview)
 - [Deployment](#deployment)
-- [Swagger Documentation](#swagger-documentation)
+- [Documentation](#documentation)
 - [Demo](#demo)
 
 ## Architecture
@@ -56,8 +56,35 @@ make compile redis
 >make postgres
 >```
 
-## Swagger documentation
-Services provides a swagger documentation. You can see it [here](assets/index.html).
+## Documentation
+### gRPC only 
+You can see a protobuf file right [here](proto/shortener.proto).
+
+### With gRPC Gateway
+Here service has two endpoints:
+
+**For getting original URL:**
+
+Endpoint
+```
+/v1/url/{shortUrl}
+```
+shortUrl - is a given later shortened URL
+
+**For posting original URL and getting a shor one:**
+
+Endpoint:
+```
+/v1/url
+```
+Request body:
+```json
+{
+  "longUrl": "http://localhost:8080/test_url"
+}
+```
+
+Also, service provides a swagger documentation. You can download it [here](assets/index.html).
 
 ## Demo
 ### Only gRPC
