@@ -25,7 +25,7 @@ func main() {
 
 	client := pb.NewShortenerClient(conn)
 	request := &pb.LongUrl{
-		LongUrl: "https://habr.com/ru/articles/461279/",
+		LongUrl: "https://localhost:6969/test_url/",
 	}
 	response, err := client.PostUrl(context.Background(), request)
 

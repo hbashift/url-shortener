@@ -6,15 +6,16 @@ proto:
 	--openapiv2_out=doc/swagger \
 	--openapiv2_opt=allow_merge=true,merge_file_name=shortener proto/*.proto
 
-build:
-	go build -o  bin/server.exe cmd/server/main.go
-	go build -o bin/api.exe cmd/api/main.go
-	go build -o bin/client.exe cmd/client/main.go
-
-docker:
+compile:
 	env GOOS=linux GOARCH=amd64 go build -o  bin/server cmd/server/main.go
-	docker build -f ./DockerFile -t url-shortener --progress=plain .
+	env GOOS=linux GOARCH=amd64 go build -o  bin/api cmd/api/main.go
 
-compose:
-	docker-compose up
-.PHONY: proto build
+postgres:
+	env GOOS=linux GOARCH=amd64 go build -o  bin/server cmd/server/main.go
+	env GOOS=linux GOARCH=amd64 go build -o  bin/api cmd/api/main.go
+	docker compose -f docker-compose-postgres.yaml up --build
+
+redis:
+	env GOOS=linux GOARCH=amd64 go build -o  bin/server cmd/server/main.go
+	env GOOS=linux GOARCH=amd64 go build -o  bin/api cmd/api/main.go
+	docker compose -f docker-compose-redis.yaml up --build

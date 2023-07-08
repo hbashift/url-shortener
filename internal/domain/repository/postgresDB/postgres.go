@@ -6,7 +6,6 @@ import (
 	"github.com/hbashift/url-shortener/internal/domain/repository"
 	"github.com/hbashift/url-shortener/internal/domain/repository/model"
 	"github.com/hbashift/url-shortener/internal/errs"
-	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
@@ -23,6 +22,16 @@ type Config struct {
 	Password string
 	DBName   string
 	SSLMode  string
+}
+
+func (p *postgresDb) isExists(longUrl string) bool {
+	var url model.Url
+	r := p.db.Where("url = ?", longUrl).Find(&url)
+	if r.Error != nil {
+		return true
+	}
+
+	return r.RowsAffected > 0
 }
 
 func (p *postgresDb) GetUrl(shortUrl uint64) (string, error) {
@@ -44,15 +53,15 @@ func (p *postgresDb) GetUrl(shortUrl uint64) (string, error) {
 
 func (p *postgresDb) PostUrl(longUrl string) (uint64, error) {
 	url := model.Url{Url: longUrl}
+	if p.isExists(longUrl) {
+		log.Printf("could not insert new record: %v", gorm.ErrDuplicatedKey)
+
+		return 0, fmt.Errorf("record already exists: %w", errs.ErrAlreadyExists)
+	}
+
 	err := p.db.Select("url").Create(&url).Error
-	UniqueViolationErr := &pgconn.PgError{Code: "23505"}
 
 	if err != nil {
-		if err != nil && errors.As(err, &UniqueViolationErr) {
-			log.Printf("could not insert new record: %v", gorm.ErrDuplicatedKey)
-
-			return 0, fmt.Errorf("record already exists: %w", errs.ErrAlreadyExists)
-		}
 
 		return 0, fmt.Errorf("db error: %w", err)
 	}
@@ -74,6 +83,7 @@ func initPostgresDB(cfg *Config) (*gorm.DB, error) {
 		cfg.Host, cfg.Port, cfg.Password, cfg.DBName, cfg.SSLMode, cfg.Username)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
 	if err != nil {
 		if err == gorm.ErrInvalidDB {
 			log.Printf("could not connect to database: %v\n", err)

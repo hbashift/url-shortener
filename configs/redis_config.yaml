@@ -1,7 +1,0 @@
-port: "8080"
-host: "localhost"
-redis:
-  addr: ":6379"
-  pass: ""
-  mainDB: "0"
-  uniqueDB: "1"

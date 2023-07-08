@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/hbashift/url-shortener/internal/api"
 	"github.com/hbashift/url-shortener/internal/domain/repository/postgresDB"
 	"github.com/hbashift/url-shortener/internal/domain/repository/redis"
 	"github.com/hbashift/url-shortener/internal/server"
@@ -10,13 +9,14 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net"
-	"time"
+	"os"
+	"strconv"
 )
 
-func RunGrpcServerWithRedis(redisConfig redis.Config, config1, config2 string) {
+func RunGrpcServerWithRedis(redisConfig redis.Config, protocol, port string) {
 	rep := redis.NewRedis(&redisConfig)
 
-	lis, err := net.Listen(config1, config2)
+	lis, err := net.Listen(protocol, port)
 	if err != nil {
 		log.Fatalf("failed to listen grpc server: %v", err)
 	}
@@ -33,10 +33,10 @@ func RunGrpcServerWithRedis(redisConfig redis.Config, config1, config2 string) {
 	}
 }
 
-func RunGrpcServerWithPg(pgConfig postgresDB.Config, c, config2 string, withGateway bool) {
+func RunGrpcServerWithPg(pgConfig postgresDB.Config, protocol, port string) {
 	rep := postgresDB.NewPostgresDB(&pgConfig)
 
-	lis, err := net.Listen(c, config2)
+	lis, err := net.Listen(protocol, port)
 	if err != nil {
 		log.Fatalf("failed to listen grpc server: %v", err)
 	}
@@ -46,11 +46,6 @@ func RunGrpcServerWithPg(pgConfig postgresDB.Config, c, config2 string, withGate
 	grpcServ := grpc.NewServer()
 
 	pb.RegisterShortenerServer(grpcServ, serv)
-
-	if withGateway {
-		time.Sleep(time.Second * 3)
-		go api.RunHttpClient(":8080")
-	}
 
 	err = grpcServ.Serve(lis)
 	if err != nil {
@@ -59,23 +54,39 @@ func RunGrpcServerWithPg(pgConfig postgresDB.Config, c, config2 string, withGate
 }
 
 func main() {
-	cfg := postgresDB.Config{
-		Host:     "localhost",
-		Port:     "5432",
-		Username: "postgres",
-		Password: "12345",
-		DBName:   "shortener",
-		SSLMode:  "disable",
-	}
+	dbType := os.Getenv("DB_TYPE")
 
-	RunGrpcServerWithPg(cfg, "tcp", ":8080", true)
+	if dbType == "postgres" {
 
-	/*	cfg := redis.Config{
-			Addr:        ":6379",
-			Pass:        "0",
-			DBNumMain:   0,
-			DBNumUnique: 1,
+		cfg := postgresDB.Config{
+			Host:     os.Getenv("POSTGRES_HOST"),
+			Port:     os.Getenv("POSTGRES_PORT"),
+			Username: os.Getenv("POSTGRES_USER"),
+			Password: os.Getenv("POSTGRES_PASSWORD"),
+			DBName:   os.Getenv("POSTGRES_DB"),
+			SSLMode:  os.Getenv("POSTGRES_SSLMODE"),
 		}
 
-		RunGrpcServerWithRedis(cfg, "tcp", ":8080")*/
+		RunGrpcServerWithPg(cfg, "tcp", os.Getenv("PORT"))
+
+	} else if dbType == "redis" {
+		mainDB, err := strconv.Atoi(os.Getenv("MAIN_DB"))
+		if err != nil {
+			panic(err)
+		}
+
+		uniqueDB, err := strconv.Atoi(os.Getenv("UNIQUE_DB"))
+		if err != nil {
+			panic(err)
+		}
+
+		cfg := redis.Config{
+			Addr:        os.Getenv("REDIS_ADDR"),
+			Pass:        os.Getenv("PASS"),
+			DBNumMain:   mainDB,
+			DBNumUnique: uniqueDB,
+		}
+
+		RunGrpcServerWithRedis(cfg, "tcp", os.Getenv("PORT"))
+	}
 }

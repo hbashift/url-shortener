@@ -65,7 +65,7 @@ func NewHttpClient(client pb.ShortenerClient) HttpClient {
 	return &httpClient{client: client}
 }
 
-func RunHttpClient(addr string) {
+func RunHttpClient(addr, port string) {
 	flag.Parse()
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -86,7 +86,7 @@ func RunHttpClient(addr string) {
 	r.GET("/v1/url/:shortUrl", client.GetShortUrl)
 	r.POST("/v1/url", client.PostLongUrl)
 
-	err = r.Run(":5000")
+	err = r.Run(port)
 	if err != nil {
 		log.Fatalf("could not run http client: %v", err)
 	}

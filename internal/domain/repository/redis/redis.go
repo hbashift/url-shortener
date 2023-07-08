@@ -24,6 +24,8 @@ type Config struct {
 	DBNumUnique int
 }
 
+// TODO Внутри докера можно обращаться как http://redis:PORT
+
 // TODO передавать по указателю или по значению?
 
 func (r *redisDb) GetUrl(shortUrl uint64) (string, error) {
@@ -98,13 +100,17 @@ func NewRedis(cfg *Config) repository.Repository {
 	mainDB, uniqueDB, ctx := initRedis(cfg)
 
 	idStr, err := mainDB.Get(ctx, "id").Result()
+	log.Println("---redis id: ", idStr, "---")
+	log.Printf("---redis error: %v\n", err)
 	if err == redis.Nil {
 		idStr = "0"
 		err = mainDB.Set(ctx, "id", idStr, 0).Err()
-
 		if err != nil {
 			log.Fatalf("could not set id key: %v\n", err)
 		}
+	} else if err != nil {
+		log.Printf("redis: %v", err)
+		panic(err)
 	}
 
 	id, err := strconv.ParseUint(idStr, 10, 64)

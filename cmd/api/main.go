@@ -5,5 +5,6 @@ import (
 )
 
 func main() {
-	api.RunHttpClient(":8080")
+
+	api.RunHttpClient("server"+":8080", ":9090")
 }
