@@ -10,15 +10,3 @@ proto:
 compile:
 	env GOOS=linux GOARCH=amd64 go build -o  bin/server cmd/server/main.go
 	env GOOS=linux GOARCH=amd64 go build -o  bin/api cmd/api/main.go
-
-# Run to start service with PostgreSQL database
-postgres:
-#	env GOOS=linux GOARCH=amd64 go build -o  bin/server cmd/server/main.go
-#	env GOOS=linux GOARCH=amd64 go build -o  bin/api cmd/api/main.go
-	docker compose -f docker-compose-postgres.yaml up --build
-
-# Run to start service with Redis database
-redis:
-#	env GOOS=linux GOARCH=amd64 go build -o  bin/server cmd/server/main.go
-#	env GOOS=linux GOARCH=amd64 go build -o  bin/api cmd/api/main.go
-	docker compose -f docker-compose-redis.yaml up --build

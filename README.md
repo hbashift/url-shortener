@@ -1,15 +1,13 @@
 # URL-shortener
 Ozon fintech internship task.
 
-URL-shortener is a project that aims to create a stateless service for creating shortened 
-links and getting their original reference.
+URL-shortener is a service for creating shortened links and getting their original reference.
 
 ## Table of Contents
 - [Architecture](#architecture)
-- [Database overview](#database-overview)
+- [URL encoding algorithm](#url-encoding-algorithm)
 - [Deployment](#deployment)
 - [Documentation](#documentation)
-- [Demo](#demo)
 
 ## Architecture
 The project can be divided into 3 main components:
@@ -21,40 +19,23 @@ when as disk storage is implemented using PostgreSQL
 
 ![Architecture of the system](/assets/architecture.png)
 
-## Database overview
-### PostgreSQL
-In PostreSQL database there is only one table - *urls*.
-
-![PostgreSQL database diagram](/assets/pg_database.png)
-
-### Redis
-In Redis, for persistence and uniqueness service is using two Redis databases.
-
-![Redis database diagram](/assets/redis_db_diagram.jpeg)
+## URL encoding algorithm
+The basic principle is as follows - the transition from a number system based on 10 to a number system based on 63. 
+Collisions are handled by shuffling the base alphabet in random order. The number that is encoded is a randomly 
+generated value.
 
 ## Deployment
-All components are dockerized and can be deployed using make commands.
+All components are dockerized and can be deployed using docker compose.
 
-**First deploy with PostgreSQL database**
+**Deploy with PostgreSQL database**
 ```
-make compile postgres
-```
-
-**First deploy with Redis database**
-```
-make compile redis
+docker compose -f docker-compose-redis.yaml up
 ```
 
->In case you want to change database - stop running container and run the following command:
->
->**For Redis**
->```
->make redis
->```
->**For PostgreSQL**
->```
->make postgres
->```
+**Deploy with Redis database**
+```
+docker compose -f docker-compose-postgres.yaml up
+```
 
 ## Documentation
 ### gRPC only 
@@ -69,9 +50,9 @@ Endpoint
 ```
 /v1/url/{shortUrl}
 ```
-shortUrl - is a given later shortened URL
+shortUrl - is a given earlier shortened URL
 
-**For posting original URL and getting a shor one:**
+**For posting original URL and getting a short one:**
 
 Endpoint:
 ```
@@ -85,24 +66,3 @@ Request body:
 ```
 
 Also, service provides a swagger documentation. You can download it [here](assets/index.html).
-
-## Demo
-### Only gRPC
-
-**PostUrl procedure**
-
-![PostUrl gRPC](/assets/post_url_grpc.png)
-
-**GetUrl procedure**
-
-![GetUrl gRPC](/assets/get_url_grpc.png)
-
-### With gRPC Gateway
-
-**PostUrl procedure**
-
-![PostUrl HTTP](/assets/post_url_http.png)
-
-**GetUrl procedure**
-
-![GetUrl HTTP](/assets/get_url_http.png)

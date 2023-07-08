@@ -1,8 +1,15 @@
-FROM golang:1.20
+FROM golang:1.20-alpine
+RUN mkdir /app
+ADD . /app
+
 WORKDIR /app
-COPY ./bin/server .
+
+COPY go.mod go.sum ./
 COPY .env .
+RUN go mod download
+
+RUN go build -o /bin/server ./cmd/server/main.go
 
 EXPOSE 8080
 
-CMD ["/app/server"]
+CMD ["./bin/server"]
