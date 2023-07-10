@@ -64,5 +64,11 @@ Request body:
   "longUrl": "http://localhost:8080/test_url"
 }
 ```
+Response body:
+```json
+{
+  "shortUrl": "{shortUrl}"
+}
+```
 
 Also, service provides a swagger documentation. You can download it [here](assets/index.html).
