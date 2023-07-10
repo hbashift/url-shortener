@@ -29,12 +29,12 @@ All components are dockerized and can be deployed using docker compose.
 
 **Deploy with PostgreSQL database**
 ```
-docker compose -f docker-compose-redis.yaml up
+docker compose -f docker-compose-postgres.yaml up
 ```
 
 **Deploy with Redis database**
 ```
-docker compose -f docker-compose-postgres.yaml up
+docker compose -f docker-compose-redis.yaml up
 ```
 
 ## Documentation
